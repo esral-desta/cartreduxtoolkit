@@ -1,12 +1,22 @@
-import { createSlice } from "@reduxjs/toolkit";
-import cartItems from "../../cartItems";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+// import cartItems from "../../cartItems";
 
 const initState = {
-  cartItems: [...cartItems],
+  cartItems: [],
   amount: 0,
   total: 0,
   isLoading: true,
 };
+
+const URL = "http://localhost:9000/posts"
+
+export const getCartItems = createAsyncThunk("cart/getCartItems",(name)=>{
+  return (
+    fetch(URL).then(res=>res.json()).catch(err=>{console.log(err);})
+  ) 
+})
+
+
 
 const cartSlice = createSlice({
   name: "cart",
@@ -39,6 +49,19 @@ const cartSlice = createSlice({
       state.total = total;
     },
   },
+  extraReducers:(builder)=>{
+    builder.addCase(getCartItems.pending,(cart,action)=>{
+      cart.isLoading = true;
+    })
+    builder.addCase(getCartItems.fulfilled,(cart,action)=>{
+      cart.isLoading = false;
+      cart.cartItems = action.payload;
+    })
+    builder.addCase(getCartItems.rejected,(cart,action)=>{
+      cart.isLoading = false
+      cart.cartItems = []
+    })
+  }
 });
 
 export const { clearCart, removeItem, increase, decrease ,calculateTotals} = cartSlice.actions;
